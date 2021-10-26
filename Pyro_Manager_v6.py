@@ -16,6 +16,7 @@ connected = 0
 # state_RL =''
 # state_RR =''
 
+active_device = 1
 
 available_ports =[
 " "
@@ -32,7 +33,7 @@ m=0
 root = Tk()
 root.geometry('710x550')
 root.resizable(width=False, height=False)
-root.title("Pyro Manager v5")
+root.title("Pyro Manager v6")
 defaultbg = root.cget('bg')
 
 fontStyle_header = tkFont.Font(family="Lucida Grande", size=25)
@@ -58,7 +59,6 @@ def on_close():
     status = 0
     # threading.Thread(target=con).kill()
     root.destroy()
-
 
 def Trig_Blink():
     print('Triggered')
@@ -121,6 +121,19 @@ def RR_DISARMED_B_Blink():
         Button_RR_DISARMED.config(bg='#FF0000')
         time.sleep(0.3)
         Button_RR_DISARMED.config(bg=defaultbg)
+        time.sleep(0.3)
+
+def Device1_act_fail():
+    for _ in range(3):
+        Button_Device_1.config(bg='#FF0000')
+        time.sleep(0.3)
+        Button_Device_1.config(bg=defaultbg)
+        time.sleep(0.3)
+def Device0_act_fail():
+    for _ in range(3):
+        Button_Device_0.config(bg='#FF0000')
+        time.sleep(0.3)
+        Button_Device_0.config(bg=defaultbg)
         time.sleep(0.3)
 
 def Test_B_Blink(result):
@@ -196,7 +209,14 @@ def con(m = 0):
                 elif(line == '122'):
                     pr = "Alert: " + line
                     print_term(str(pr))
-                    messagebox.showwarning('Warning', 'Analogue Malfunction Warning!!!!')
+                    messagebox.showwarning('Warning', ' Device 0 Analogue Malfunction Warning!!!!')
+                    # Test_Coms()
+                    threading.Thread(target = Test_Coms).start()
+                    # ser.write(bytes(str(4), 'utf-8'))
+                elif(line == '120'):
+                    pr = "Alert: " + line
+                    print_term(str(pr))
+                    messagebox.showwarning('Warning', ' Device 1 Analogue Malfunction Warning!!!!')
                     # Test_Coms()
                     threading.Thread(target = Test_Coms).start()
                     # ser.write(bytes(str(4), 'utf-8'))
@@ -204,14 +224,28 @@ def con(m = 0):
                     pr = "Alert: " + line
                     print_term(str(pr))
                     print_term('Detonated!!!')
+                    print_term('Device 0 Triggered')
                     threading.Thread(target = Trig_Blink).start()
-                    messagebox.showwarning('Detonation', 'Pyro Triggered')
+                    messagebox.showwarning('Detonation', 'Pyro Triggered Device 0')
+                elif(line == '125'):
+                    pr = "Alert: " + line
+                    print_term(str(pr))
+                    print_term('Detonated!!!')
+                    print_term('Device 1 Triggered')
+                    threading.Thread(target = Trig_Blink).start()
+                    messagebox.showwarning('Detonation', 'Pyro Triggered Device 1')
                 elif(line == '123'):
                     pr = "Status: " + line
                     print_term(str(pr))
-                    print_term('Device Started/Rebooted..')
+                    print_term('Device 0 Started/Rebooted..')
                     # threading.Thread(target = Trig_Blink).start()
-                    messagebox.showinfo('Init', 'Started, Pyro Trigger Device Started')
+                    messagebox.showinfo('Init', 'Started, Pyro Trigger Device 0 Started')
+                elif(line == '126'):
+                    pr = "Status: " + line
+                    print_term(str(pr))
+                    print_term('Device 1 Started/Rebooted..')
+                    # threading.Thread(target = Trig_Blink).start()
+                    messagebox.showinfo('Init', 'Started, Pyro Trigger Device 1 Started')
                 while(line != ''):
                     telem_reading = True
                     print(ser.readline())
@@ -574,16 +608,89 @@ def GPMG_FIRE():
 def Trigger_reset():
     Trigger_reset = send_data("q")
     if (Trigger_reset == '65'):
-        print_term("Action Successful")
+        print_term("Trigger_Reset-Successful")
+        if(active_device == 0):
+            print_term("Trigger reset for Dev-0")
+        elif(active_device == 1):
+            print_term("Trigger reset for Dev-1")
         print("Successful")
         # Button_ALL_FIRE_SEQ.config(bg = '#F5F9D2')
     else:
         print_term("Action Failed")
         print("Failed")
 
+def Select_device_1():
+    Dev_sel = send_data("1")
+    if (Dev_sel == '1'):
+        print_term("Selected device 1")
+        # threading.Thread(target=Telemetry_sync, args=(Telemetry_data[0], Telemetry_data[1], Telemetry_data[2], Telemetry_data[3],)).start()
+        threading.Thread(target = Test_Coms).start()
+        print("Successful")
+        # active_device = 1
+        device_selector(1)
+        print(active_device)
+        # Button_RR_ARMED.config(text= 'RR-ARM', bg=defaultbg, padx=17)
+        Button_Device_1.config(bg = '#00FF00')
+        Button_Device_0.config(bg = defaultbg)
+        Label_Current_device.config(text = "Device 1")
+        # Button_ALL_FIRE_SEQ.config(bg = '#F5F9D2')
+    else:
+        print_term("Action Failed")
+        threading.Thread(target=Device1_act_fail).start()
+        print("Failed")
+
+def Select_device_0():
+    Dev_sel = send_data("0")
+    if (Dev_sel == '0'):
+        print_term("Selected device 0")
+        # threading.Thread(target=Telemetry_sync, args=(Telemetry_data[0], Telemetry_data[1], Telemetry_data[2], Telemetry_data[3],)).start()
+        threading.Thread(target = Test_Coms).start()
+        print("Successful")
+        # active_device = 0
+        device_selector(0)
+        print(active_device)
+        Button_Device_0.config(bg = '#00FF00')
+        Button_Device_1.config(bg = defaultbg)
+        Label_Current_device.config(text = "Device 0")
+        # Button_ALL_FIRE_SEQ.config(bg = '#F5F9D2')
+    else:
+        print_term("Action Failed")
+        threading.Thread(target=Device0_act_fail).start()
+        print("Failed")
+
+def ping_0():
+    ping0 = send_data("A")
+    if (ping0 == '17'):
+        # print_term("Deactivation Code Send to dev_1")
+        print_term("Device 0 Active")
+        print("Successful")
+        # Button_ALL_FIRE_SEQ.config(bg = '#F5F9D2')
+    else:
+        print_term("Dev_0 not online")
+        print("Failed")
+
+def ping_1():
+    ping1 = send_data("B")
+    if (ping1 == '18'):
+        # print_term("Deactivation Code Send to dev_0")
+        print_term("Device 1 Active")
+        print("Successful")
+        # Button_ALL_FIRE_SEQ.config(bg = '#F5F9D2')
+    else:
+        print_term("Dev_1 not online")
+        print("Failed")
+
+def device_selector(dev):
+    global active_device
+    if(dev == 0):
+        print("Device 0 active")
+        active_device = 0
+    elif(dev == 1):
+        print("Device 1 active")
+        active_device = 1
 
 
-Label_Pyro_Header = Label(root, text="The Dirty Solution v5", font =fontStyle_header_2)
+Label_Pyro_Header = Label(root, text="The Dirty Solution v6", font =fontStyle_header_2)
 # Label_selectport = Label(root, text="Select COM Port")
 
 Button_Search = Button(root, text="Search Device", command = Search_ports, pady = 1)
@@ -638,7 +745,16 @@ Button_RR_DISARMED = Button(Control_frame, text= "RR-DISARM", command = RR_DISAR
 Button_RR_FIRE = Button(Control_frame, text= "FIRE-RR", command = RR_FIRE, padx = 5)
 
 Label_Trigger_in = Label(Control_frame, text= "Trig",relief = RIDGE)
+
+Label_Current_device = Label(Control_frame, text= "Select Device", font = fontStyle_tab_search)
+
 Button_Trigger_Reset = Button(Control_frame, text= "Trigger Reset", command = Trigger_reset, padx = 5, pady = 5, font = fontStyle_normal_small, bg = '#F5F9D2')
+Button_Device_0 = Button(Control_frame, text= "Device - 0", command = Select_device_0, padx = 5, pady = 5, font = fontStyle_normal_small, bg = defaultbg)
+Button_Device_1 = Button(Control_frame, text= "Device - 1", command = Select_device_1, padx = 5, pady = 5, font = fontStyle_normal_small, bg = defaultbg)
+
+Button_Device_0_ping = Button(Control_frame, text= "Ping - 0", command = ping_0, padx = 10, pady = 0, font = fontStyle_normal_small, bg = '#F5F9D2')
+Button_Device_1_ping = Button(Control_frame, text= "Ping - 1", command = ping_1, padx = 10, pady = 0, font = fontStyle_normal_small, bg = '#F5F9D2')
+
 
 Button_ALL_FIRE_SIM = Button(Control_frame, text= "FIRE RPG7", command = RPG7_FIRE, padx = 5, pady = 5, font = fontStyle_header, bg = '#F5F9D2')
 Button_ALL_FIRE_SEQ = Button(Control_frame, text= "FIRE GPMG", command = GPMG_FIRE, padx = 5, pady = 5, font = fontStyle_header, bg = '#F5F9D2')
@@ -646,6 +762,8 @@ Button_ALL_FIRE_SEQ = Button(Control_frame, text= "FIRE GPMG", command = GPMG_FI
 Label_object_MainBox.place(x=75-25, y=80+25)
 
 Label_Trigger_in.place(x=380, y=350)
+
+Label_Current_device.place(x=165, y=275)
 
 Button_FL_ARMED.place(x = 75+2-25, y = 80+2+25)
 Button_FL_DISARMED.place(x = 75+2-25, y = 105+4+25)
@@ -669,6 +787,12 @@ Button_RR_FIRE.place(x = 380, y = 65)
 Button_RR_FIRE.place(x = 380, y = 65)
 
 Button_Trigger_Reset.place(x = 5, y = 360)
+
+Button_Device_1.place(x = 330, y = 305)
+Button_Device_1_ping.place(x = 332, y = 275)
+
+Button_Device_0.place(x = 50, y = 305)
+Button_Device_0_ping.place(x = 50, y = 275)
 
 Button_ALL_FIRE_SIM.place(x = 5, y = 400)
 Button_ALL_FIRE_SEQ.place(x = 225, y = 400)
