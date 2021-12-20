@@ -33,7 +33,7 @@ m=0
 root = Tk()
 root.geometry('710x550')
 root.resizable(width=False, height=False)
-root.title("Pyro Manager v6")
+root.title("Pyro Manager v7")
 defaultbg = root.cget('bg')
 
 fontStyle_header = tkFont.Font(family="Lucida Grande", size=25)
@@ -206,6 +206,20 @@ def con(m = 0):
                     pr = "Alert: " + line
                     print_term(str(pr))
                     messagebox.showwarning('Warning', 'Digital Malfunction Warning!!!!')
+                elif(line == '110'):
+                    pr = "Alert: " + line
+                    print_term(str(pr))
+                    print_term('Detonated -> EED!!!')
+                    print_term('Device 1 Triggered by EED')
+                    threading.Thread(target = Trig_Blink).start()
+                    messagebox.showwarning('Detonation EED', 'Pyro Triggered Device 1 By EED')
+                elif(line == '111'):
+                    pr = "Alert: " + line
+                    print_term(str(pr))
+                    print_term('Detonated -> EED!!!')
+                    print_term('Device 0 Triggered by EED')
+                    threading.Thread(target = Trig_Blink).start()
+                    messagebox.showwarning('Detonation EED', 'Pyro Triggered Device 0 By EED')
                 elif(line == '122'):
                     pr = "Alert: " + line
                     print_term(str(pr))
@@ -690,7 +704,7 @@ def device_selector(dev):
         active_device = 1
 
 
-Label_Pyro_Header = Label(root, text="Pyro Manager v6", font =fontStyle_header_2)
+Label_Pyro_Header = Label(root, text="Pyro Manager v7", font =fontStyle_header_2)
 # Label_selectport = Label(root, text="Select COM Port")
 
 Button_Search = Button(root, text="Search Device", command = Search_ports, pady = 1)
